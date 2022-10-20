@@ -65,7 +65,7 @@ Perusahaan hanya ingin menghitung penjualan dari produk yang terkirim saja, jadi
 Lakukan Langkah 1 & 2, untuk tabel orders_2.</br>
 
 ```sql
-select 
+SELECT 
   SUM(quantity) AS total_penjualan, 
   SUM(quantity*priceeach) AS revenue
 FROM 
@@ -84,7 +84,7 @@ WHERE
 </details>
 
 ```sql
-select 
+SELECT 
   SUM(quantity) AS total_penjualan, 
   SUM(quantity*priceeach) AS revenue
 FROM 
@@ -113,7 +113,7 @@ Kedua tabel orders_1 dan orders_2 masih terpisah, untuk menghitung persentasi ke
 5. Kelompokkan total_penjualan berdasarkan kolom “quarter”, dan jangan lupa menambahkan kolom ini pada bagian select.
 
 ```sql
-SELETC 
+SELECT 
   quarter, 
   SUM(quantity) AS total_penjualan,
   SUM(quantity*priceeach) AS revenue
@@ -318,20 +318,7 @@ WHERE
 <summary markdown="span">OUTPUT :</summary>
   
 | quarter | Q2      |
-|---------+---------|
+|---------|---------|
 |       1 | 24.0000 |
   
 </details>
-
-----
-
-####
-
-
-
-
-
-
-
-
-
