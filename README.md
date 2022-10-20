@@ -172,12 +172,166 @@ GROUP BY quarter;
 |       1 |              43 |
 |       2 |              35 |
 
+</details>
+
+----
+
+#### Seberapa banyak customers tersebut yang sudah melakukan transaksi?
+Problem ini merupakan kelanjutan dari problem sebelumnya yaitu dari sejumlah customer yang registrasi di periode quarter-1 dan quarter-2, berapa banyak yang sudah melakukan transaksi</br>
+1. Dari tabel customer, pilihlah kolom customerID, createDate dan tambahkan kolom baru dengan menggunakan fungsi QUARTER(…) untuk mengekstrak nilai quarter dari CreateDate dan beri nama “quarter”</br>
+2. Filter kolom “createDate” sehingga hanya menampilkan baris dengan createDate antara 1 Januari 2004 dan 30 Juni 2004.</br>
+3. Gunakan statement Langkah A&B sebagai subquery dengan alias tabel_b.</br>
+4. Dari tabel orders_1 dan orders_2, pilihlah kolom customerID, gunakan DISTINCT untuk menghilangkan duplikasi, kemudian gabungkan dengan kedua tabel tersebut dengan UNION.</br>
+5. Filter tabel_b dengan operator IN() menggunakan 'Select statement langkah 4' , sehingga hanya customerID yang pernah bertransaksi (customerID tercatat di tabel orders) yang diperhitungkan.</br>
+6. Hitunglah jumlah unik customers (tidak ada duplikasi customers) di statement SELECT dan beri nama “total_customers”.</br>
+7. Kelompokkan total_customer berdasarkan kolom “quarter”, dan jangan lupa menambahkan kolom ini pada bagian select.
+
+```sql
+SELECT 
+  quarter, 
+  count(distinct customerid) AS total_customers 
+FROM 
+  (SELECT 
+    customerid, 
+    createdate, 
+    quarter(createdate) AS quarter 
+  FROM 
+    customer
+  WHERE 
+    createdate between "2004-01-01" and "2004-06-30") AS table_b
+WHERE 
+  customerid 
+  IN
+    (SELECT DISTINCT customerid
+    FROM
+      orders_1
+    UNION
+    SELECT DISTINCT customerid
+    FROM
+      orders_2)
+GROUP BY 
+  quarter;
+```
+
+<details>
+<summary markdown="span">OUTPUT :</summary>
+  
+| quarter | total_customers |
+|---------|-----------------|
+|       1 |              25 |
+|       2 |              19 |
+  
+</details>
+
+----
+
+#### Category produk apa saja yang paling banyak di-order oleh customers di Quarter-2?
+Untuk mengetahui kategori produk yang paling banyak dibeli, maka dapat dilakukan dengan menghitung total order dan jumlah penjualan dari setiap kategori produk.</br>
+1. Dari kolom orders_2, pilih productCode, orderNumber, quantity, status.</br>
+2. Tambahkan kolom baru dengan mengekstrak 3 karakter awal dari productCode yang merupakan ID untuk kategori produk; dan beri nama categoryID.</br>
+3. Filter kolom “status” sehingga hanya produk dengan status “Shipped” yang diperhitungkan.</br>
+4. Gunakan statement Langkah 1, 2, dan 3 sebagai subquery dengan alias tabel_c.</br>
+5. Hitunglah total order dari kolom “orderNumber” dan beri nama “total_order”, dan jumlah penjualan dari kolom “quantity” dan beri nama “total_penjualan”.</br>
+6. Kelompokkan berdasarkan categoryID, dan jangan lupa menambahkan kolom ini pada bagian select.</br>
+7. Urutkan berdasarkan “total_order” dari terbesar ke terkecil.</br>
+
+```sql
+SELECT 
+  * 
+FROM
+  (SELECT 
+    categoryid, 
+    count(distinct ordernumber) AS total_order, 
+    sum(quantity) AS total_penjualan
+  FROM
+    (SELECT productcode, 
+      ordernumber, 
+      quantity, 
+      status,
+      LEFT(productcode,3) AS categoryid 
+    FROM 
+      orders_2
+    WHERE status="shipped") AS table_c
+  GROUP BY categoryid) a
+ORDER BY 
+  total_order
+DESC;
+```
+
+<details>
+<summary markdown="span">OUTPUT :</summary>
+
+| categoryid | total_order | total_penjualan |
+|------------|-------------|-----------------|
+| S18        |          25 |            2264 |
+| S24        |          21 |            1826 |
+| S32        |          11 |             616 |
+| S12        |          10 |             491 |
+| S50        |           8 |             292 |
+| S10        |           8 |             492 |
+| S70        |           7 |             675 |
+| S72        |           2 |              61 |
 
 </details>
 
 ----
 
+#### Seberapa banyak customers yang tetap aktif bertransaksi setelah transaksi pertamanya?
+Mengetahui seberapa banyak customers yang tetap aktif menunjukkan apakah xyz.com tetap digemari oleh customers untuk memesan kebutuhan bisnis mereka. Hal ini juga dapat menjadi dasar bagi tim product dan business untuk pengembangan product dan business kedepannya. Adapun metrik yang digunakan disebut retention cohort. Untuk project ini, kita akan menghitung retention dengan query SQL sederhana, sedangkan cara lain yaitu JOIN dan SELF JOIN akan dibahas dimateri selanjutnya :</br>
+</br>
+Oleh karena baru terdapat 2 periode yang Quarter 1 dan Quarter 2, maka retention yang dapat dihitung adalah retention dari customers yang berbelanja di Quarter 1 dan kembali berbelanja di Quarter 2, sedangkan untuk customers yang berbelanja di Quarter 2 baru bisa dihitung retentionnya di Quarter 3.</br>
+1. Dari tabel orders_1, tambahkan kolom baru dengan value “1” dan beri nama “quarter”.</br>
+2. Dari tabel orders_2, pilihlah kolom customerID, gunakan distinct untuk menghilangkan duplikasi.</br>
+3. Filter tabel orders_1 dengan operator IN() menggunakan 'Select statement langkah 2', sehingga hanya customerID yang pernah bertransaksi di quarter 2 (customerID tercatat di tabel orders_2) yang diperhitungkan.</br>
+4. Hitunglah jumlah unik customers (tidak ada duplikasi customers) dibagi dengan total_ customers dalam percentage, pada Select statement dan beri nama “Q2”.</br>
+
+```sql
+#Menghitung total unik customers yang transaksi di quarter_1
+SELECT 
+  COUNT(DISTINCT customerID) AS total_customers 
+FROM 
+  orders_1;
+#output = 25
+```
+
+<details>
+<summary markdown="span">OUTPUT :</summary>
+  
+| total_customers |
+|-----------------|
+|              25 |
+  
+</details>
+
+```sql
+SELECT
+  1 as quarter, 
+  (COUNT(DISTINCT customerid)/25*100) AS Q2 
+FROM 
+  orders_1 
+WHERE 
+  customerid 
+  IN(SELECT DISTINCT customerid FROM orders_2);
+```
+
+<details>
+<summary markdown="span">OUTPUT :</summary>
+  
+| quarter | Q2      |
+|---------+---------|
+|       1 | 24.0000 |
+  
+</details>
+
+----
+
 ####
+
+
+
+
+
+
 
 
 
